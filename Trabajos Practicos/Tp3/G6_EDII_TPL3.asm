@@ -2,8 +2,8 @@
 ; @file       G6_TPL3_ED2.asm
 ;
 ; @author     Conde_Ana_Victoria
-;	          Goicoechea_Emilia
-;	          Lauc_Mirko
+;	      Goicoechea_Emilia
+;	      Lauc_Mirko
 ;             Lurgo_Donato
 ;             Bertalot_Renata
 ;
@@ -13,31 +13,30 @@
 ;===============================================================================
 
 ;===============================================================================
-; DIRECTIVAS DE INCLUSIÓN
+; DIRECTIVAS DE INCLUSI�N
 ;===============================================================================
-	LIST P=16F887
-#include "p16f887.inc"
+LIST P=16F887
+#include <xc.inc>
 
 ;===============================================================================
-; CONFIGURACIÓN GENERAL DEL MCU
+; CONFIGURACI�N GENERAL DEL MCU
 ;===============================================================================
-	__CONFIG _CONFIG1, _XT_OSC & _WDTE_OFF & _MCLRE_ON & _LVP_OFF
+__CONFIG _CONFIG1, _XT_OSC & _WDTE_OFF & _MCLRE_ON & _LVP_OFF
 
 ;===============================================================================
-; DEFINICIÓN DE CONSTANTES
+; DEFINICI�N DE CONSTANTES
 ;===============================================================================
 #DEFINE CTRL_DSPL_1 PORTC, RC0
 #DEFINE CTRL_DSPL_2 PORTC, RC1
 #DEFINE CTRL_DSPL_3 PORTC, RC2
 ;===============================================================================
-; DEFINICIÓN DE VARIABLES
+; DEFINICI�N DE VARIABLES
 ;===============================================================================
-	CBLOCK 0x20
+CBLOCK 0x20
             DELAY1_Init
             DELAY2_Init
             DELAY3_Init
             DATA_DSPL_1
-            NUM_MAX_DSPL
             DELAY1
             DELAY2
             DELAY3
@@ -45,24 +44,10 @@
             COUNTER_DSPL
             DATA_DSPL_3
             COUNTER_SEGMENTS
-             COUNTER_TEST
-	ENDC
+            SEGMENT_SHADOW
 ;===============================================================================
-; DECLARACIÓN DE MACROS PARA CONFIGURACIÓN DE REGISTROS
+; DECLARACI�N DE MACROS PARA CONFIGURACI�N DE REGISTROS
 ;===============================================================================
-
-;===============================================================================
-; INICIALIZACIÓN DEL MCU (CÓDIGO ABSOLUTO)
-;===============================================================================
-    ORG     0x00	;Vector de Reset
-    GOTO    INICIO	;Salto al inicio del programa principal
-    ORG     0x05	;UbicaciÓn Programa Principal en la memoria
-			;de programa
-
-;===============================================================================
-; INICIALIZACIÓN DE MACROS PARA CONFIGURACIÓN DE REGISTROS
-;===============================================================================
-INICIO	    ;-----InicializaciÓn de Macros-------
 CFG_DSPL MACRO
         BSF STATUS, RP0
         BSF STATUS, RP1
@@ -80,14 +65,16 @@ CFG_DSPL MACRO
         BCF STATUS, RP1
         CLRF PORTC
         CLRF PORTD
-	ENDM
+ENDM
 ;===============================================================================
-DSPL_ALL_OFF MACRO
-        BCF STATUS, RP0
-        BCF STATUS, RP1
-        CLRF PORTC
-        CLRF PORTD
-	ENDM
+CFG_DELAY_2ms MACRO
+        MOVLW   d'1'
+        MOVWF   DELAY1_Init
+        MOVLW   d'45'
+        MOVWF   DELAY2_Init
+        MOVLW   d'15'
+        MOVWF   DELAY3_Init
+ENDM
 ;===============================================================================
 CFG_DIGITS_DSPL MACRO
         MOVLW   0x0A
@@ -98,124 +85,236 @@ CFG_DIGITS_DSPL MACRO
 ;
         MOVLW   0x06
         MOVWF   DATA_DSPL_3
-CFG_DELAY_2ms MACRO
-        MOVLW   d'45'
-        MOVWF   DELAY1_Init
-        MOVLW   d'15'
-        MOVWF   DELAY2_Init
-	ENDM
+ENDM
+DSPL_ALL_OFF MACRO
+        BCF STATUS, RP0
+        BCF STATUS, RP1
+        CLRF PORTC
+        CLRF PORTD
+ENDM
+
 ;===============================================================================
 CFG_DELAY_300ms MACRO
-        MOVLW   d\'133\'
+        MOVLW   d'3'
         MOVWF   DELAY1_Init
-        MOVLW   d\'248\'
+        MOVLW   d'248'
         MOVWF   DELAY2_Init
-        MOVLW   d\'3\'
+        MOVLW   d'133'
         MOVWF   DELAY3_Init
-	ENDM
+ENDM
 ;===============================================================================
 CFG_DELAY_1s MACRO
-        MOVLW   d\'133\'
+        MOVLW   d'10'
         MOVWF   DELAY1_Init
-        MOVLW   d\'248\'
+        MOVLW   d'248'
         MOVWF   DELAY2_Init
-        MOVLW   d\'10\'
+        MOVLW   d'133'
         MOVWF   DELAY3_Init
-	ENDM
+ENDM
+;===============================================================================
+; INICIALIZACI�N DEL MCU (C�DIGO ABSOLUTO)
+;===============================================================================
+    ORG     0x00	;Vector de Reset
+    GOTO    INICIO	;Salto al inicio del programa principal
+    ORG     0x05	;Ubicaci�n Programa Principal en la memoria
+			;de programa
 
+;===============================================================================
+; INICIALIZACI�N DE MACROS PARA CONFIGURACI�N DE REGISTROS
+;===============================================================================
+INICIO	    ;-----Inicializaci�n de Macros-------
+        CFG_DSPL            ; Ejecuta la configuración de puertos
+        CFG_DELAY_2ms       ; Ejecuta la carga de variables del delay
+        CFG_DIGITS_DSPL     ; Ejecuta la carga de datos del grupo
 
+    CALL    TEST_DSPL
 ;===============================================================================
 ; INICIO PROGRAMA PRINCIPAL
 ;===============================================================================
 MAIN_LOOP
-    ;...
+    CALL    MUX_DSPL
     GOTO    MAIN_LOOP
 
 ;===============================================================================
 ; SUBRUTINAS
 ;===============================================================================
-;===============================================================================
-; TABLA LUT
-;===============================================================================
-	ORG 0x0100
-TABALA_7SEG
-    ADDWF PCL, F ; suma el número recibido en W al contador del programa
-    RETLW b'00111111' ; muestra el 0 -> prende A, B, C, D, E, F 
-    RETLW b'00000110' ; muestra el 1 -> prende B, C
-    RETLW b'01011011' ; muestra el 2 -> prende A, B, D, E, G
-    RETLW b'01001111' ; muestra el 3 -> prende A, B, C, D, G
-    RETLW b'01100110' ; muestra el 4 -> prende B, C, F, G
-    RETLW b'01101101' ; muestra el 5 -> prende A, C, D, F, G
-    RETLW b'01111101' ; muestra el 6 -> prende A, C, D, E, F, G
-    RETLW b'00000111' ; muestra el 7 -> prende A, B, C
-    RETLW b'01111111' ; muestra el 8 -> prende A, B, C, D, E, F, G
-    RETLW b'01100111' ; muestra el 9 -> prende A, B, C, F, G
+;*******************************************************************************
+; @brief    Genera un retardo mediante tres bucles anidados.
+;
+; @details  Utiliza DELAY1_Init, DELAY2_Init y DELAY3_Init como
+;           valores iniciales y DELAY1, DELAY2 y DELAY3 como contadores.
+;*******************************************************************************
+;
+DELAY_3LOOP
+        MOVF    DELAY1_Init, W  ; Copia el valor inicial del contador 1 a W
+        MOVWF   DELAY1          ; Inicia el contador 1
 
+LOOP1
+        MOVF    DELAY2_Init, W  ; Copia el valor inicial del contador 2 a W
+        MOVWF   DELAY2          ; Inicia el contador 2
 
+LOOP2
+        MOVF    DELAY3_Init, W  ; Copia el valor inicial del contador 3 a W
+        MOVWF   DELAY3          ; Inicia el contador 3
+
+LOOP3
+        DECFSZ  DELAY3, F       ; Decrementa el contador 3
+        GOTO    LOOP3           ; Repite hasta que DELAY3 llegue a 0
+        DECFSZ  DELAY2, F       ; Decrementa el contador 2
+        GOTO    LOOP2           ; Vuelve a cargar DELAY3 y repetir
+        DECFSZ  DELAY1, F       ; Decrementa el contador 1
+        GOTO    LOOP1           ; Vuelve a cargar DELAY2 y DELAY3
+RETURN                          ; Termina el delay y vuelve al CALL
+;
+;*******************************************************************************
+; @brief   MUX_DSPL
+;
+; @details  evalua la variable COUNTER_DSPL para determinar cuál de los 3
+;           displays debe actualizarse en el ciclo acual
+;*******************************************************************************
+
+MUX_DSPL
+        CALL DELAY_3LOOP
+;
+        MOVF   COUNTER_DSPL, W
+        XORLW  d'3'
+        BTFSC  STATUS, Z         ; Z=1? -> counter_dspl = 3
+        GOTO   UPDATE_DSPL_3     ; SI -> actualiza display 3
+;
+        MOVF   COUNTER_DSPL, W
+        XORLW  d'2'
+        BTFSC  STATUS, Z         ; Z=1? -> counter_dspl = 2
+        GOTO   UPDATE_DSPL_2     ; SI -> actualiza display 2
+
+        MOVF   COUNTER_DSPL, W
+        XORLW  d'1'
+        BTFSC  STATUS, Z         ; Z=1? -> counter_dspl = 1
+        GOTO   UPDATE_DSPL_1     ; SI -> actualiza display 1
+;
+        GOTO   RST_COUNTER_DSPL  ; NO -> reinicia el contador a 3
+
+;*******************************************************************************
+; @brief    Actualiza los datos y la señal de control del display activo.
+;
+; @details  Envía el patrón de segmentos (LUT) de DATA_DSPL_i al PORTD
+;           y activa el transistor correspondiente en el PORTC según COUNTER_DSPL.
+;*******************************************************************************
+UPDATE_DSPL_3
+        MOVF    DATA_DSPL_3, W
+        CALL    TABLE_DECO_DSPL_CC
+        MOVWF    PORTD
+        MOVF    COUNTER_DSPL, W
+        CALL    TABLE_CTRL_DSPL_CC
+        MOVWF   PORTC
+;
+        GOTO    DECF_COUNTER_DSPL
+;-------------------------------------------------------------------------------
+UPDATE_DSPL_2
+        MOVF    DATA_DSPL_2, W
+        CALL    TABLE_DECO_DSPL_CC
+        MOVWF    PORTD
+        MOVF    COUNTER_DSPL, W
+        CALL    TABLE_CTRL_DSPL_CC
+        MOVWF   PORTC
+;
+        GOTO    DECF_COUNTER_DSPL
+;-------------------------------------------------------------------------------
+UPDATE_DSPL_1
+        MOVF    DATA_DSPL_1, W
+        CALL    TABLE_DECO_DSPL_CC
+        MOVWF    PORTD
+        MOVF    COUNTER_DSPL, W
+        CALL    TABLE_CTRL_DSPL_CC
+        MOVWF   PORTC
+;
+        GOTO    DECF_COUNTER_DSPL
+;*******************************************************************************
+; @brief    Actualiza o reinicia el contador del multiplexado.
+;
+; @details  Resta 1 para pasar al siguiente display, o lo vuelve a 3
+;           cuando termina el ciclo. Ambas opciones retornan al MAIN.
+;*******************************************************************************
+DECF_COUNTER_DSPL
+        DECF    COUNTER_DSPL, F     ; Descuenta 1 al display actual[cite: 2]
+        RETURN                      ; Vuelve al MAIN_LOOP
+
+RST_COUNTER_DSPL
+        MOVLW   d'3'
+        MOVWF   COUNTER_DSPL        ; Vuelve a empezar desde el display 3[cite: 2]
+        RETURN                      ; Vuelve al MAIN_LOOP
 ;*******************************************************************************
 ; @brief    TEST_DSPL
 ;
 ; @details  enciende todos los segmentos de todos los digitos temporalmente
 ;*******************************************************************************
-
 TEST_DSPL
- MOVLW b'01111111'
- MOVWF PORTD
- 
- MOVLW b'00000111'
- MOVWF PORTC
- 
- MOVLW D'250'
- MOVWF COUNTER_TEST
-
-TEST_LOOP
-  CALL DELAY_3LOOP
-  DECFSZ COUNTER_TEST, F
-  GOTO TEST_LOOP
-
-  CLRF PORTC
-  CLRF PORTD
-  
-  RETURN
-
-;*******************************************************************************
-; @brief   CFG_DELAY_3LOOP MACRO
-
+        MOVLW  d'3'
+        MOVWF  COUNTER_DSPL
 ;
-; @details  evalua la variable COUNTER_DSPL para determinar cuál de los 3
-;           displays debe actualizarse en el ciclo acual
-;******************************************************************************* 
-
-CFG_DELAY_3LOOP MACRO
-	ENDM
-MUX_DSPL
-        CFG_DELAY_3LOOP
-        MOVLW  D'3'
-        SUBWF  COUNTER_DSPL, W   ; hace W=COUNTER_DSPL-3
-        BTFSC  STATUS, Z         ; Z=1? -> counter_dspl = 3
-        GOTO   UPDATE_DSPL_3     ; SI -> actualiza display 3
-
-        MOVLW  D'2'              ; NO -> va a preguntar si el counter_dspl =2
-        SUBWF  COUNTER_DSPL, W   ; hace W=COUNTER_DSPL-2
-        BTFSC  STATUS, Z         ; Z=1? -> counter_dspl = 2
-        GOTO   UPDATE_DSPL_2     ; SI -> actualiza display 2
-
-        MOVLW  D'1'              ; NO->va a preguntar si el counter_dspl = 1 
-        SUBWF  COUNTER_DSPL, W   ; hace W=COUNTER_DSPL-1
-        BTFSC  STATUS, Z         ; Z=1? -> counter_dspl = 1
-        GOTO   UPDATE_DSPL_1     ; SI -> actualiza display 1
-        GOTO   RST_COUNTER_DSPL  ; NO -> reinicia el contador a 3 
+LOOP_TEST_DSPL
+        MOVF  COUNTER_DSPL, W
+        CALL   TABLE_CTRL_DSPL_CC
+        MOVWF  PORTC
+;
+        MOVLW  b'00000001'
+        MOVWF  SEGMENT_SHADOW
+        MOVLW  d'7'
+        MOVWF  COUNTER_SEGMENTS
+LOOP_TEST_SEGMENT
+        MOVF    SEGMENT_SHADOW, W
+        MOVWF   PORTD
+;
+        CFG_DELAY_300ms
+        CALL    DELAY_3LOOP
+;
+        BCF     STATUS, C
+        RLF     SEGMENT_SHADOW, F
+        DECFSZ  COUNTER_SEGMENTS, F
+        GOTO    LOOP_TEST_SEGMENT
+;
+        MOVLW   b'01111111'
+        MOVWF   PORTD
+;
+CFG_DELAY_1s
+        CALL    DELAY_3LOOP
+CFG_DELAY_1s
+        CALL    DELAY_3LOOP
+;
+        CLRF    PORTD
+CFG_DELAY_1s
+        CALL    DELAY_3LOOP
+CFG_DELAY_1s
+        CALL    DELAY_3LOOP
+;
+        DECF    COUNTER_DSPL, F
+        MOVF    COUNTER_DSPL, W
+        BTFSS   STATUS, Z
+        GOTO    LOOP_TEST_DSPL
+RETURN
 
 ;===============================================================================
-UPDATE_DSPL_1
-	RETURN
-UPDATE_DSPL_2
-	RETURN
-UPDATE_DSPL_3
-	RETURN
-RST_COUNTER_DSPL
-	RETURN
-DELAY_3LOOP
-	RETURN
+; TABLA LUT - CÁTODO COMÚN
+;===============================================================================
+ORG     0x0100
+TABLE_DECO_DSPL_CC
+        ADDWF   PCL, F ; suma el número recibido en W al contador del programa
+        RETLW   b'00111111' ; muestra el 0 -> prende A, B, C, D, E, F
+        RETLW   b'00000110' ; muestra el 1 -> prende B, C
+        RETLW   b'01011011' ; muestra el 2 -> prende A, B, D, E, G
+        RETLW   b'01001111' ; muestra el 3 -> prende A, B, C, D, G
+        RETLW   b'01100110' ; muestra el 4 -> prende B, C, F, G
+        RETLW   b'01101101' ; muestra el 5 -> prende A, C, D, F, G
+        RETLW   b'01111101' ; muestra el 6 -> prende A, C, D, E, F, G
+        RETLW   b'00000111' ; muestra el 7 -> prende A, B, C
+        RETLW   b'01111111' ; muestra el 8 -> prende A, B, C, D, E, F, G
+        RETLW   b'01100111' ; muestra el 9 -> prende A, B, C, F, G
+        RETLW   b'01101111'
+TABLE_CTRL_DSPL_CC
+        ADDWF   PCL, F
+        RETLW   b'00000000'
+        RETLW   b'00000001'
+        RETLW   b'00000010'
+        RETLW   b'00000100'
+;===============================================================================
     END
 ;===============================================================================
