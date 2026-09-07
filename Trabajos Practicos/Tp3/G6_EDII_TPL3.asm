@@ -2,8 +2,8 @@
 ; @file       G6_TPL3_ED2.asm
 ;
 ; @author     Conde_Ana_Victoria
-;	      Goicoechea_Emilia
-;	      Lauc_Mirko
+;             Goicoechea_Emilia
+;             Lauc_Mirko
 ;             Lurgo_Donato
 ;             Bertalot_Renata
 ;
@@ -13,26 +13,26 @@
 ;===============================================================================
 
 ;===============================================================================
-; DIRECTIVAS DE INCLUSI�N
+; DIRECTIVAS DE INCLUSIÓN
 ;===============================================================================
-LIST P=16F887
-#include <xc.inc>
+    LIST P=16F887
+    #include "p16f887.inc"
 
 ;===============================================================================
-; CONFIGURACI�N GENERAL DEL MCU
+; CONFIGURACIÓN GENERAL DEL MCU
 ;===============================================================================
-__CONFIG _CONFIG1, _XT_OSC & _WDTE_OFF & _MCLRE_ON & _LVP_OFF
+    __CONFIG _CONFIG1, _XT_OSC & _WDTE_OFF & _MCLRE_ON & _LVP_OFF
 
 ;===============================================================================
-; DEFINICI�N DE CONSTANTES
+; DEFINICIÓN DE CONSTANTES
 ;===============================================================================
-#DEFINE CTRL_DSPL_1 PORTC, RC0
-#DEFINE CTRL_DSPL_2 PORTC, RC1
-#DEFINE CTRL_DSPL_3 PORTC, RC2
+    #DEFINE CTRL_DSPL_1 PORTC, RC0
+    #DEFINE CTRL_DSPL_2 PORTC, RC1
+    #DEFINE CTRL_DSPL_3 PORTC, RC2
 ;===============================================================================
-; DEFINICI�N DE VARIABLES
+; DEFINICIÓN DE VARIABLES
 ;===============================================================================
-CBLOCK 0x20
+    CBLOCK 0x20
             DELAY1_Init
             DELAY2_Init
             DELAY3_Init
@@ -45,8 +45,9 @@ CBLOCK 0x20
             DATA_DSPL_3
             COUNTER_SEGMENTS
             SEGMENT_SHADOW
+    ENDC
 ;===============================================================================
-; DECLARACI�N DE MACROS PARA CONFIGURACI�N DE REGISTROS
+; DECLARACIÓN DE MACROS PARA CONFIGURACIÓN DE REGISTROS
 ;===============================================================================
 CFG_DSPL MACRO
         BSF STATUS, RP0
@@ -65,7 +66,7 @@ CFG_DSPL MACRO
         BCF STATUS, RP1
         CLRF PORTC
         CLRF PORTD
-ENDM
+    ENDM
 ;===============================================================================
 CFG_DELAY_2ms MACRO
         MOVLW   d'1'
@@ -74,7 +75,7 @@ CFG_DELAY_2ms MACRO
         MOVWF   DELAY2_Init
         MOVLW   d'15'
         MOVWF   DELAY3_Init
-ENDM
+    ENDM
 ;===============================================================================
 CFG_DIGITS_DSPL MACRO
         MOVLW   0x0A
@@ -85,13 +86,13 @@ CFG_DIGITS_DSPL MACRO
 ;
         MOVLW   0x06
         MOVWF   DATA_DSPL_3
-ENDM
+    ENDM
 DSPL_ALL_OFF MACRO
         BCF STATUS, RP0
         BCF STATUS, RP1
         CLRF PORTC
         CLRF PORTD
-ENDM
+    ENDM
 
 ;===============================================================================
 CFG_DELAY_300ms MACRO
@@ -101,7 +102,7 @@ CFG_DELAY_300ms MACRO
         MOVWF   DELAY2_Init
         MOVLW   d'133'
         MOVWF   DELAY3_Init
-ENDM
+    ENDM
 ;===============================================================================
 CFG_DELAY_1s MACRO
         MOVLW   d'10'
@@ -110,19 +111,19 @@ CFG_DELAY_1s MACRO
         MOVWF   DELAY2_Init
         MOVLW   d'133'
         MOVWF   DELAY3_Init
-ENDM
+    ENDM
 ;===============================================================================
-; INICIALIZACI�N DEL MCU (C�DIGO ABSOLUTO)
+; INICIALIZACIÓN DEL MCU (CÓDIGO ABSOLUTO)
 ;===============================================================================
-    ORG     0x00	;Vector de Reset
-    GOTO    INICIO	;Salto al inicio del programa principal
-    ORG     0x05	;Ubicaci�n Programa Principal en la memoria
-			;de programa
+    ORG     0x00 ;Vector de Reset
+    GOTO    INICIO  ;Salto al inicio del programa principal
+    ORG     0x05 ;Ubicación Programa Principal en la memoria
+            ;de programa
 
 ;===============================================================================
-; INICIALIZACI�N DE MACROS PARA CONFIGURACI�N DE REGISTROS
+; INICIALIZACIÓN DE MACROS PARA CONFIGURACIÓN DE REGISTROS
 ;===============================================================================
-INICIO	    ;-----Inicializaci�n de Macros-------
+INICIO      ;-----Inicialización de Macros-------
         CFG_DSPL            ; Ejecuta la configuración de puertos
         CFG_DELAY_2ms       ; Ejecuta la carga de variables del delay
         CFG_DIGITS_DSPL     ; Ejecuta la carga de datos del grupo
@@ -164,7 +165,7 @@ LOOP3
         GOTO    LOOP2           ; Vuelve a cargar DELAY3 y repetir
         DECFSZ  DELAY1, F       ; Decrementa el contador 1
         GOTO    LOOP1           ; Vuelve a cargar DELAY2 y DELAY3
-RETURN                          ; Termina el delay y vuelve al CALL
+    RETURN                      ; Termina el delay y vuelve al CALL
 ;
 ;*******************************************************************************
 ; @brief   MUX_DSPL
@@ -235,13 +236,13 @@ UPDATE_DSPL_1
 ;           cuando termina el ciclo. Ambas opciones retornan al MAIN.
 ;*******************************************************************************
 DECF_COUNTER_DSPL
-        DECF    COUNTER_DSPL, F     ; Descuenta 1 al display actual[cite: 2]
-        RETURN                      ; Vuelve al MAIN_LOOP
+        DECF    COUNTER_DSPL, F
+        RETURN
 
 RST_COUNTER_DSPL
         MOVLW   d'3'
-        MOVWF   COUNTER_DSPL        ; Vuelve a empezar desde el display 3[cite: 2]
-        RETURN                      ; Vuelve al MAIN_LOOP
+        MOVWF   COUNTER_DSPL
+        RETURN
 ;*******************************************************************************
 ; @brief    TEST_DSPL
 ;
@@ -275,39 +276,39 @@ LOOP_TEST_SEGMENT
         MOVLW   b'01111111'
         MOVWF   PORTD
 ;
-CFG_DELAY_1s
+        CFG_DELAY_1s
         CALL    DELAY_3LOOP
-CFG_DELAY_1s
+        CFG_DELAY_1s
         CALL    DELAY_3LOOP
 ;
         CLRF    PORTD
-CFG_DELAY_1s
+        CFG_DELAY_1s
         CALL    DELAY_3LOOP
-CFG_DELAY_1s
+        CFG_DELAY_1s
         CALL    DELAY_3LOOP
 ;
         DECF    COUNTER_DSPL, F
         MOVF    COUNTER_DSPL, W
         BTFSS   STATUS, Z
         GOTO    LOOP_TEST_DSPL
-RETURN
+        RETURN
 
 ;===============================================================================
 ; TABLA LUT - CÁTODO COMÚN
 ;===============================================================================
-ORG     0x0100
+    ORG     0x0100
 TABLE_DECO_DSPL_CC
-        ADDWF   PCL, F ; suma el número recibido en W al contador del programa
-        RETLW   b'00111111' ; muestra el 0 -> prende A, B, C, D, E, F
-        RETLW   b'00000110' ; muestra el 1 -> prende B, C
-        RETLW   b'01011011' ; muestra el 2 -> prende A, B, D, E, G
-        RETLW   b'01001111' ; muestra el 3 -> prende A, B, C, D, G
-        RETLW   b'01100110' ; muestra el 4 -> prende B, C, F, G
-        RETLW   b'01101101' ; muestra el 5 -> prende A, C, D, F, G
-        RETLW   b'01111101' ; muestra el 6 -> prende A, C, D, E, F, G
-        RETLW   b'00000111' ; muestra el 7 -> prende A, B, C
-        RETLW   b'01111111' ; muestra el 8 -> prende A, B, C, D, E, F, G
-        RETLW   b'01100111' ; muestra el 9 -> prende A, B, C, F, G
+        ADDWF   PCL, F
+        RETLW   b'00111111'
+        RETLW   b'00000110'
+        RETLW   b'01011011'
+        RETLW   b'01001111'
+        RETLW   b'01100110'
+        RETLW   b'01101101'
+        RETLW   b'01111101'
+        RETLW   b'00000111'
+        RETLW   b'01111111'
+        RETLW   b'01100111'
         RETLW   b'01101111'
 TABLE_CTRL_DSPL_CC
         ADDWF   PCL, F
